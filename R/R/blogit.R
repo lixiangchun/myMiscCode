@@ -29,6 +29,8 @@ blogit <-
   if (any(is.infinite(u))) {
     warning("Inf found for coefficients, set use.glm = FALSE is recommended.")
   }
+  if (plotting_for_sig_only && all(l <= 1))
+    return(fit)
   if (missing(user_specified_variables)) {
     variable_labels <- names(m)
   } else {
@@ -67,13 +69,45 @@ library(arm)
 library(rmeta)
 
 ## An example of blogit in regressing SMG mutation status versus mutational exposures
-setwd("/Users/lixiangchun/Public/WorkSpace/Project/DigestiveSystemCancer/Analysis/iCGA_PanelOfNormals/StomachPublishedDataOnlyReanalyses/mutated_genes_vs_mutational_signatures")
-load('SMG_vs_MSig.RData')
-#b=bayesglm(as.formula(f2), data=regular, family=binomial)
-fit = blogit(
-  ERBB4 ~ msig1 + msig2 + msig3 + msig4 + msig5 + msig6 + msig7,
-  data = regular,
-  family = binomial,
-  clip = c(0, 16), main="ERBB4 vs. mutational exposures",
-  use.glm = FALSE
-)
+stad_SMGs_vs_MSig <- function() {
+  setwd(
+    "/Users/lixiangchun/Public/WorkSpace/Project/DigestiveSystemCancer/Analysis/iCGA_PanelOfNormals/StomachPublishedDataOnlyReanalyses/mutated_genes_vs_mutational_signatures"
+  )
+  load('SMG_vs_MSig.RData')
+  pdf(
+    "RegularMutated_Smgs_vs_mutational_signatures.pdf",
+    width = 7,
+    height = 4
+  )
+  for (gene in regular_mutated_smgs) {
+    f <- sprintf("%s ~ msig1 + msig2 + msig3 + msig4 + msig5 + msig6 + msig7", gene)
+    fit = blogit(
+      as.formula(f),
+      data = regular,
+      family = binomial,
+      clip = c(0, 9),
+      main = sprintf("%s vs. mutational exposures", gene),
+      use.glm = FALSE, plotting_for_sig_only = TRUE
+    )
+  }
+  dev.off()
+  pdf(
+    "HyperMutated_Smgs_vs_mutational_signatures.pdf",
+    width = 7,
+    height = 4
+  )
+  for (gene in hyper_mutated_smgs) {
+    f <- sprintf("%s ~ msig1 + msig2 + msig3 + msig4 + msig5 + msig6 + msig7", gene)
+    fit = blogit(
+      as.formula(f),
+      data = hyper,
+      family = binomial,
+      clip = c(0, 9),
+      main = sprintf("%s vs. mutational exposures", gene),
+      use.glm = FALSE, plotting_for_sig_only = TRUE
+    )
+  }
+  dev.off()
+}
+
+stad_SMGs_vs_MSig()
