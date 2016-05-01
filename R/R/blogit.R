@@ -17,7 +17,7 @@ blogit <-
            use.glm=FALSE)
   {
   if (use.glm) {
-    fit = glm(...)
+    fit <- glm(...)
   } else {
     fit <- arm::bayesglm(...)
   }
