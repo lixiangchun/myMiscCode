@@ -6,6 +6,8 @@
 ##+coefficients are inflated. In this case, switch to use `bayesglm`
 ##+is recommended.
 
+## ref: http://stats.stackexchange.com/questions/11109/how-to-deal-with-perfect-separation-in-logistic-regression
+
 blogit <-
   function(...,
            clip = c(0, 8),
@@ -23,27 +25,28 @@ blogit <-
   if (plotting_for_sig_only && all(r$p.value[2:length(r$p.value)] > 0.05))
     return(fit)
   m <- signif(exp(r$coef), 2)
-  l <- signif(exp(r$coef - 2.96 * r$se), 2)
-  u <- signif(exp(r$coef + 2.96 * r$se), 2)
+  l <- signif(exp(r$coef - 2 * r$se), 2)
+  u <- signif(exp(r$coef + 2 * r$se), 2)
   p <- signif(r$p.value, 2)
   if (any(is.infinite(u))) {
     warning("Inf found for coefficients, set use.glm = FALSE is recommended.")
   }
-  if (plotting_for_sig_only && all(l <= 1))
+  if (plotting_for_sig_only && all(l <= 1)) ## works for logit only
     return(fit)
   if (missing(user_specified_variables)) {
     variable_labels <- names(m)
-  } else {
+  } else { ## Suppose that user_specified_variables does not include a term for intercept.
+    ## I use NA for the intercept term.
     variable_labels <- c(NA, user_specified_variables)
   }
   tabletext <- list()
   tabletext[[1]] <- c("Var", "OR", "2.5% CI", "97.5% CI", "P-value")
-  for (i in 2:length(m)) {
+  for (i in 2:length(m)) { ## Intercept was not included
     tabletext[[i]] <- c(variable_labels[i], m[i], l[i], u[i], p[i])
   }
   tabletext <- do.call("rbind", tabletext)
   is.summary = c(1, rep(0, 20))
-  m[1] <- NA
+  m[1] <- NA  ## Set the 1st item (i.e. intercept) for NA, empty plot for this term.
   l[1] <- NA
   u[1] <- NA
   forestplot(
@@ -110,4 +113,4 @@ stad_SMGs_vs_MSig <- function() {
   dev.off()
 }
 
-stad_SMGs_vs_MSig()
+##stad_SMGs_vs_MSig()
